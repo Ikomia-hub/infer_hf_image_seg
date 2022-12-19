@@ -1,0 +1,3 @@
+facebook/detr-resnet-50-panoptic
+facebook/detr-resnet-50-dc5-panoptic
+facebook/detr-resnet-101-panoptic
