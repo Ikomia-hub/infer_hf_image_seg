@@ -85,6 +85,12 @@ class InferHuggingfaceImageSegmentationWidget(core.CWorkflowTaskWidget):
                                 self.gridLayout, "Confidence threshold",
                                 self.parameters.conf_thres, min = 0., max = 1., step = 0.01, decimals = 3)
 
+        # Link of available models from Hugging face hub
+        urlLink = "<a href=\"https://huggingface.co/models?sort=downloads&search=resnet+panoptic\">"\
+                 "List of DETR ResNet models [Hugging Face Hub] </a>"
+        self.qlabelModelLink = QLabel(urlLink)
+        self.qlabelModelLink.setOpenExternalLinks(True)
+        self.gridLayout.addWidget(self.qlabelModelLink, 5, 0)
 
         # PyQt -> Qt wrapping
         layout_ptr = qtconversion.PyQtToQt(self.gridLayout)
