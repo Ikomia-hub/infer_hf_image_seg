@@ -243,8 +243,8 @@ class InferHuggingfaceImageSegmentation(dataprocess.C2dImageTask):
                                     s,
                                     x_obj,
                                     y_obj,
-                                    w_obj,
-                                    h_obj,
+                                    w_obj if info["isthing"] else float(0),
+                                    h_obj if info["isthing"] else float(0),
                                     ml,
                                     self.colors[cat_value+offset])
 
