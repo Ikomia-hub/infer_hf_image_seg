@@ -21,7 +21,6 @@ import copy
 from copy import deepcopy
 from ikomia.utils import strtobool
 from transformers import AutoFeatureExtractor, AutoModelForImageSegmentation
-from transformers.models.detr.feature_extraction_detr import rgb_to_id
 from detectron2.data import MetadataCatalog
 import numpy as np
 import torch
@@ -103,6 +102,13 @@ class InferHuggingfaceImageSegmentation(dataprocess.C2dImageTask):
         # Function returning the number of progress steps for this process
         # This is handled by the main progress bar of Ikomia application
         return 1
+    
+    def rgb_to_id(self, color):
+        if isinstance(color, np.ndarray) and len(color.shape) == 3:
+            if color.dtype == np.uint8:
+                color = color.astype(np.int32)
+            return color[:, :, 0] + 256 * color[:, :, 1] + 256 * 256 * color[:, :, 2]
+        return int(color[0] + 256 * color[1] + 256 * 256 * color[2])
 
     def run(self):
         # Core function of your process
@@ -140,7 +146,6 @@ class InferHuggingfaceImageSegmentation(dataprocess.C2dImageTask):
             np.random.seed(10)
             self.colors = np.array(np.random.randint(0, 255, (len(self.classes), 3)))
             self.colors = [[int(c[0]), int(c[1]), int(c[2])] for c in self.colors]
-            self.setOutputColorMap(0, 1, self.colors)
 
             param.update = False
 
@@ -148,6 +153,8 @@ class InferHuggingfaceImageSegmentation(dataprocess.C2dImageTask):
         input = self.getInput(0)
         image = input.getImage()
         self.infer(image)
+        
+        self.setOutputColorMap(0, 1, self.colors)
 
         # Step progress bar:
         self.emitStepProgress()
@@ -197,7 +204,7 @@ class InferHuggingfaceImageSegmentation(dataprocess.C2dImageTask):
 
         # We convert the png into an segment id map
         masks = np.array(masks, dtype=np.uint8)
-        mask_id = rgb_to_id(masks)
+        mask_id = self.rgb_to_id(masks)
         unique_colors = np.unique(mask_id).tolist()
 
         masks_binary = np.zeros((h,w))
@@ -217,9 +224,8 @@ class InferHuggingfaceImageSegmentation(dataprocess.C2dImageTask):
             if horizontal_indicies.shape[0]:
                 x1, x2 = horizontal_indicies[[0, -1]]
                 y1, y2 = vertical_indicies[[0, -1]]
-            boxes.append([x1, y1, x2, y2])
-        boxes = boxes[:-1]
-        boxes.reverse()
+            boxes.insert(0, [x1, y1, x2, y2])
+        boxes = boxes[1:]
 
         # Convertion of the class id
         for i in range(len(segments_info)):
