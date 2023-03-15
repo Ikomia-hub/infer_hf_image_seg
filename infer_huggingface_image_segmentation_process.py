@@ -126,7 +126,8 @@ class InferHuggingfaceImageSegmentation(dataprocess.C2dImageTask):
                 model_id = param.model_name
                 self.feature_extractor = AutoFeatureExtractor.from_pretrained(model_id)
             else:
-                feature_extractor_path = os.path.join(param.checkpoint_path, "preprocessor_config.json")
+                feature_extractor_path = os.path.join(param.checkpoint_path, 
+                                                      "preprocessor_config.json")
                 model_id = param.checkpoint_path
                 self.feature_extractor = AutoFeatureExtractor.from_pretrained(feature_extractor_path)
 
@@ -153,7 +154,7 @@ class InferHuggingfaceImageSegmentation(dataprocess.C2dImageTask):
         input = self.getInput(0)
         image = input.getImage()
         self.infer(image)
-        
+
         self.setOutputColorMap(0, 1, self.colors)
 
         # Step progress bar:
@@ -268,8 +269,8 @@ class InferHuggingfaceImageSegmentationFactory(dataprocess.CTaskFactory):
         self.info.shortDescription = "Panoptic segmentation using models from Hugging Face."
         self.info.description = "This plugin proposes inference for panoptic segmentation"\
                                 "using transformers models from Hugging Face. It regroups"\
-                                "models covered by the Hugging Face class:"\
-                                "<AutoModelForImageSegmentation>. Models can be loaded either"\
+                                "models covered by the Hugging Face class: "\
+                                "AutoModelForImageSegmentation. Models can be loaded either"\
                                 "from your fine-tuned model (local) or from the Hugging Face Hub."
         # relative path -> as displayed in Ikomia application process tree
         self.info.path = "Plugins/Python/Segmentation"
