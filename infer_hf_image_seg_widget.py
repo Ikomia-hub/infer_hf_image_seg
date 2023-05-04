@@ -18,25 +18,25 @@
 
 from ikomia import core, dataprocess
 from ikomia.utils import pyqtutils, qtconversion
-from infer_huggingface_image_segmentation.infer_huggingface_image_segmentation_process import InferHuggingfaceImageSegmentationParam
+from infer_hf_image_seg.infer_hf_image_seg_process import InferHfImageSegParam
 from torch.cuda import is_available
 # PyQt GUI framework
 from PyQt5.QtWidgets import *
 import os 
-from infer_huggingface_image_segmentation.utils import Autocomplete
+from infer_hf_image_seg.utils import Autocomplete
 
 
 # --------------------
 # - Class which implements widget associated with the process
 # - Inherits PyCore.CWorkflowTaskWidget from Ikomia API
 # --------------------
-class InferHuggingfaceImageSegmentationWidget(core.CWorkflowTaskWidget):
+class InferHfImageSegWidget(core.CWorkflowTaskWidget):
 
     def __init__(self, param, parent):
         core.CWorkflowTaskWidget.__init__(self, parent)
 
         if param is None:
-            self.parameters = InferHuggingfaceImageSegmentationParam()
+            self.parameters = InferHfImageSegParam()
         else:
             self.parameters = param
 
@@ -83,7 +83,7 @@ class InferHuggingfaceImageSegmentationWidget(core.CWorkflowTaskWidget):
         # Threshold
         self.double_spin_thres = pyqtutils.append_double_spin(
                                 self.gridLayout, "Confidence threshold",
-                                self.parameters.conf_thres, min = 0., max = 1., step = 0.01, decimals = 3)
+                                self.parameters.conf_thres, min = 0., max = 1., step = 0.01, decimals = 2)
 
         # Link of available models from Hugging face hub
         urlLink = "<a href=\"https://huggingface.co/models?sort=downloads&search=resnet+panoptic\">"\
@@ -119,13 +119,13 @@ class InferHuggingfaceImageSegmentationWidget(core.CWorkflowTaskWidget):
 # - Factory class to build process widget object
 # - Inherits PyDataProcess.CWidgetFactory from Ikomia API
 # --------------------
-class InferHuggingfaceImageSegmentationWidgetFactory(dataprocess.CWidgetFactory):
+class InferHfImageSegWidgetFactory(dataprocess.CWidgetFactory):
 
     def __init__(self):
         dataprocess.CWidgetFactory.__init__(self)
         # Set the name of the process -> it must be the same as the one declared in the process factory class
-        self.name = "infer_huggingface_image_segmentation"
+        self.name = "infer_hf_image_seg"
 
     def create(self, param):
         # Create widget object
-        return InferHuggingfaceImageSegmentationWidget(param, None)
+        return InferHfImageSegWidget(param, None)
