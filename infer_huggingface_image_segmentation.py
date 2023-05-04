@@ -28,12 +28,12 @@ class IkomiaPlugin(dataprocess.CPluginProcessInterface):
     def __init__(self):
         dataprocess.CPluginProcessInterface.__init__(self)
 
-    def getProcessFactory(self):
+    def get_process_factory(self):
         # Instantiate process object
         from infer_huggingface_image_segmentation.infer_huggingface_image_segmentation_process import InferHuggingfaceImageSegmentationFactory
         return InferHuggingfaceImageSegmentationFactory()
 
-    def getWidgetFactory(self):
+    def get_widget_factory(self):
         # Instantiate associated widget object
         from infer_huggingface_image_segmentation.infer_huggingface_image_segmentation_widget import InferHuggingfaceImageSegmentationWidgetFactory
         return InferHuggingfaceImageSegmentationWidgetFactory()
