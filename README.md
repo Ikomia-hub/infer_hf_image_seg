@@ -1,1 +1,1 @@
-# infer_huggingface_image_segmentation
+# infer_hf_image_seg
