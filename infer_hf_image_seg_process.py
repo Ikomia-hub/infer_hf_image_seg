@@ -162,7 +162,9 @@ class InferHfImageSeg(dataprocess.CInstanceSegmentationTask):
         #Get input
         input = self.get_input(0)
         image = input.get_image()
-        self.infer(image)
+
+        with torch.no_grad():
+            self.infer(image)
 
         # Step progress bar:
         self.emit_step_progress()
