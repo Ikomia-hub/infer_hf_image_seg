@@ -41,8 +41,6 @@ class InferHfImageSegParam(core.CWorkflowTaskParam):
         # Place default value initialization here
         self.cuda = True if torch.cuda.is_available() else False
         self.model_name = "facebook/detr-resnet-50-panoptic"
-        self.model_weight_file = ""
-        self.use_custom_model = False
         self.conf_thres = 0.5
         self.update = False
 
