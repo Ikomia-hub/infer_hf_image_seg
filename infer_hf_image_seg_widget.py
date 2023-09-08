@@ -60,21 +60,6 @@ class InferHfImageSegWidget(core.CWorkflowTaskWidget):
         self.combo_model.setCurrentText(self.parameters.model_name)
         model_list_file.close()
 
-        self.check_checkoint = pyqtutils.append_check(self.gridLayout, "Model from checkpoint(local)",
-                                                       self.parameters.use_custom_model)
-
-        self.check_checkoint.stateChanged.connect(self.onStateChanged)
-
-        self.combo_model.setVisible(not self.check_checkoint.isChecked())
-        
-        # Loading moadel from checkpoint path
-        self.browse_ckpt = pyqtutils.append_browse_file(self.gridLayout,
-                                                        label="Checkpoint path",
-                                                        path=self.parameters.model_path,
-                                                        mode=QFileDialog.Directory)
-
-        self.browse_ckpt.setVisible(self.check_checkoint.isChecked())
-
         # Cuda
         self.check_cuda = pyqtutils.append_check(
                         self.gridLayout, "Cuda",
@@ -98,10 +83,6 @@ class InferHfImageSegWidget(core.CWorkflowTaskWidget):
         # Set widget layout
         self.set_layout(layout_ptr)
 
-    # Widget update on check
-    def onStateChanged(self, int):
-        self.browse_ckpt.setVisible(self.check_checkoint.isChecked())
-        self.combo_model.setVisible(not self.check_checkoint.isChecked())
 
     def on_apply(self):
         # Apply button clicked slot
@@ -109,8 +90,6 @@ class InferHfImageSegWidget(core.CWorkflowTaskWidget):
         self.parameters.model_name = self.combo_model.currentText()
         self.parameters.conf_thres = self.double_spin_thres.value()
         self.parameters.cuda = self.check_cuda.isChecked()
-        self.parameters.use_custom_model = self.check_checkoint.isChecked()
-        self.parameters.model_path = self.browse_ckpt.path
         # Send signal to launch the process
         self.emit_apply(self.parameters)
 

@@ -28,7 +28,7 @@ import random
 import io
 from PIL import Image
 import os
-
+import json 
 
 # --------------------
 # - Class to handle the process parameters
@@ -39,10 +39,9 @@ class InferHfImageSegParam(core.CWorkflowTaskParam):
     def __init__(self):
         core.CWorkflowTaskParam.__init__(self)
         # Place default value initialization here
-        self.model_name_or_path = ""
         self.cuda = True if torch.cuda.is_available() else False
         self.model_name = "facebook/detr-resnet-50-panoptic"
-        self.model_path = ""
+        self.model_weight_file = ""
         self.use_custom_model = False
         self.conf_thres = 0.5
         self.update = False
@@ -50,11 +49,8 @@ class InferHfImageSegParam(core.CWorkflowTaskParam):
     def set_values(self, param_map):
         # Set parameters values from Ikomia application
         # Parameters values are stored as string and accessible like a python dict
-        self.model_name_or_path = param_map["model_name_or_path"]
         self.cuda = strtobool(param_map["cuda"])
         self.model_name = str(param_map["model_name"])
-        self.pretrained = strtobool(param_map["use_custom_model"])
-        self.model_path = param_map["model_path"]
         self.conf_thres = float(param_map["conf_thres"])
         self.update = strtobool(param_map["update"])
 
@@ -62,11 +58,8 @@ class InferHfImageSegParam(core.CWorkflowTaskParam):
         # Send parameters values to Ikomia application
         # Create the specific dict structure (string container)
         param_map = {}
-        param_map["model_name_or_path"] = self.model_name_or_path
         param_map["cuda"] = str(self.cuda)
         param_map["model_name"] = str(self.model_name)
-        param_map["use_custom_model"] = str(self.use_custom_model)
-        param_map["model_path"] = self.model_path
         param_map["conf_thres"] = str(self.conf_thres)
         param_map["update"] = str(self.update)
         return param_map
@@ -88,7 +81,6 @@ class InferHfImageSeg(dataprocess.CInstanceSegmentationTask):
         # Detect if we have a GPU available
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.model = None
-        self.model_id = None
         self.feature_extractor = None
         self.meta = None
         self.stuff_classes = None
@@ -115,34 +107,19 @@ class InferHfImageSeg(dataprocess.CInstanceSegmentationTask):
 
         param = self.get_param_object()
 
+        #Get input
+        input = self.get_input(0)
+        image = input.get_image()
+
         if param.update or self.model is None:
             model_id = None
             # Feature extractor selection
-            if param.model_path != "":
-                if os.path.isfile(param.model_path):
-                    directory = os.path.dirname(param.model_path)
-                    model_id = directory
-                    param.use_custom_model = True
-                else:
-                    model_id = param.model_path
-                    param.use_custom_model = True
-            if param.model_name_or_path != "":
-                if os.path.isfile(param.model_name_or_path):
-                    directory = os.path.dirname(param.model_name_or_path)
-                    model_id = directory
-                    param.use_custom_model = True      
-                if os.path.isdir(param.model_name_or_path):
-                    model_id = param.model_name_or_path
-                    param.use_custom_model = True
 
-            if param.use_custom_model is False:
-                model_id = param.model_name
-                self.feature_extractor = AutoFeatureExtractor.from_pretrained(model_id)
-            else:
-                feature_extractor_path = os.path.join(param.model_path, 
-                                                      "preprocessor_config.json")
-                model_id = param.model_path
-                self.feature_extractor = AutoFeatureExtractor.from_pretrained(feature_extractor_path)
+        if param.update or self.model is None:
+            model_id = None
+            # Feature extractor selection
+            model_id = param.model_name
+            self.feature_extractor = AutoFeatureExtractor.from_pretrained(model_id)
 
             # Loading model weight
             self.model = AutoModelForImageSegmentation.from_pretrained(model_id)
@@ -158,10 +135,6 @@ class InferHfImageSeg(dataprocess.CInstanceSegmentationTask):
             self.set_names(self.classes)
 
             param.update = False
-
-        #Get input
-        input = self.get_input(0)
-        image = input.get_image()
 
         with torch.no_grad():
             self.infer(image)
@@ -284,8 +257,8 @@ class InferHfImageSegFactory(dataprocess.CTaskFactory):
                                 "AutoModelForImageSegmentation. Models can be loaded either "\
                                 "from your fine-tuned model (local) or from the Hugging Face Hub."
         # relative path -> as displayed in Ikomia application process tree
-        self.info.path = "Plugins/Python/Segmentation"
-        self.info.version = "1.0.0"
+        self.info.path = "Plugins/Python/Panoptic Segmentation"
+        self.info.version = "1.1.0"
         self.info.icon_path = "icons/icon.png"
         self.info.authors = "Thomas Wolf, Lysandre Debut, Victor Sanh, Julien Chaumond, "\
                             "Clement Delangue, Anthony Moi, Pierric Cistac, Tim Rault, "\
