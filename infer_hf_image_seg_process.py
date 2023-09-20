@@ -85,6 +85,8 @@ class InferHfImageSeg(dataprocess.CInstanceSegmentationTask):
         self.thing_classes = None
         self.classes = None
         self.update = False
+        self.model_folder = os.path.join(os.path.dirname(os.path.realpath(__file__)), "weights")
+
 
     def get_progress_steps(self):
         # Function returning the number of progress steps for this process
@@ -117,10 +119,10 @@ class InferHfImageSeg(dataprocess.CInstanceSegmentationTask):
             model_id = None
             # Feature extractor selection
             model_id = param.model_name
-            self.feature_extractor = AutoFeatureExtractor.from_pretrained(model_id)
+            self.feature_extractor = AutoFeatureExtractor.from_pretrained(model_id, cache_dir=self.model_folder)
 
             # Loading model weight
-            self.model = AutoModelForImageSegmentation.from_pretrained(model_id)
+            self.model = AutoModelForImageSegmentation.from_pretrained(model_id, cache_dir=self.model_folder)
             self.device = torch.device("cuda") if param.cuda else torch.device("cpu")
             self.model.to(self.device)
             print("Will run on {}".format(self.device.type))
