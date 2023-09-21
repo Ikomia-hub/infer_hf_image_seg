@@ -119,10 +119,33 @@ class InferHfImageSeg(dataprocess.CInstanceSegmentationTask):
             model_id = None
             # Feature extractor selection
             model_id = param.model_name
-            self.feature_extractor = AutoFeatureExtractor.from_pretrained(model_id, cache_dir=self.model_folder)
-
+            try:
+                self.feature_extractor = AutoFeatureExtractor.from_pretrained(
+                    model_id,
+                    cache_dir=self.model_folder,
+                    local_files_only=True
+                )
+            except Exception as e:
+                print(f"Failed with error: {e}. Trying without the local_files_only parameter...")
+                self.feature_extractor = AutoFeatureExtractor.from_pretrained(
+                    model_id,
+                    cache_dir=self.model_folder,
+                )         
+       
             # Loading model weight
-            self.model = AutoModelForImageSegmentation.from_pretrained(model_id, cache_dir=self.model_folder)
+            try:
+                self.model = AutoModelForImageSegmentation.from_pretrained(
+                    model_id,
+                    cache_dir=self.model_folder,
+                    local_files_only=True
+                )
+            except Exception as e:
+                print(f"Failed with error: {e}. Trying without the local_files_only parameter...")
+                self.model = AutoModelForImageSegmentation.from_pretrained(
+                    model_id,
+                    cache_dir=self.model_folder
+                )
+
             self.device = torch.device("cuda") if param.cuda else torch.device("cpu")
             self.model.to(self.device)
             print("Will run on {}".format(self.device.type))
