@@ -274,11 +274,6 @@ class InferHfImageSegFactory(dataprocess.CTaskFactory):
         # Set process information as string here
         self.info.name = "infer_hf_image_seg"
         self.info.short_description = "Panoptic segmentation using models from Hugging Face. "
-        self.info.description = "This plugin proposes inference for panoptic segmentation "\
-                                "using transformers models from Hugging Face. It regroups "\
-                                "models covered by the Hugging Face class: "\
-                                "AutoModelForImageSegmentation. Models can be loaded either "\
-                                "from your fine-tuned model (local) or from the Hugging Face Hub."
         # relative path -> as displayed in Ikomia application process tree
         self.info.path = "Plugins/Python/Panoptic Segmentation"
         self.info.version = "1.1.1"
@@ -295,7 +290,8 @@ class InferHfImageSegFactory(dataprocess.CTaskFactory):
         # URL of documentation
         self.info.documentation_link = "https://www.aclweb.org/anthology/2020.emnlp-demos.6"
         # Code source repository
-        self.info.repository = "https://github.com/huggingface/transformers"
+        self.info.repository = "https://github.com/Ikomia-hub/infer_hf_image_seg"
+        self.info.original_repository = "https://github.com/huggingface/transformers"
         # Keywords used for search
         self.info.keywords = "instance, segmentation, inference, transformer,"\
                             "Hugging Face, Pytorch, Dert, resnet, Facebook"
