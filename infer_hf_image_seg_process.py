@@ -295,6 +295,8 @@ class InferHfImageSegFactory(dataprocess.CTaskFactory):
         # Keywords used for search
         self.info.keywords = "instance, segmentation, inference, transformer,"\
                             "Hugging Face, Pytorch, Dert, resnet, Facebook"
+        self.info.algo_type = core.AlgoType.INFER
+        self.info.algo_tasks = "PANOPTIC_SEGMENTATION"
 
     def create(self, param=None):
         # Create process object
