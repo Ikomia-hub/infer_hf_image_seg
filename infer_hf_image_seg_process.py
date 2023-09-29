@@ -20,7 +20,7 @@ from ikomia import core, dataprocess
 import copy
 from copy import deepcopy
 from ikomia.utils import strtobool
-from transformers import AutoFeatureExtractor, AutoModelForImageSegmentation
+from transformers import AutoFeatureExtractor, DetrForSegmentation
 from detectron2.data import MetadataCatalog
 import numpy as np
 import torch
@@ -60,6 +60,7 @@ class InferHfImageSegParam(core.CWorkflowTaskParam):
         param_map["model_name"] = str(self.model_name)
         param_map["conf_thres"] = str(self.conf_thres)
         param_map["update"] = str(self.update)
+
         return param_map
 
 
@@ -113,42 +114,47 @@ class InferHfImageSeg(dataprocess.CInstanceSegmentationTask):
 
         if param.update or self.model is None:
             model_id = None
-            # Feature extractor selection
 
         if param.update or self.model is None:
+            # Set cache dir
+            old_hub_dir = torch.hub.get_dir()
+            torch.hub.set_dir(self.model_folder)
+
             model_id = None
-            # Feature extractor selection
             model_id = param.model_name
+            
+            # Load model weight
             try:
-                self.feature_extractor = AutoFeatureExtractor.from_pretrained(
+                self.model = DetrForSegmentation.from_pretrained(
                     model_id,
                     cache_dir=self.model_folder,
                     local_files_only=True
-                )
+                    )
             except Exception as e:
                 print(f"Failed with error: {e}. Trying without the local_files_only parameter...")
-                self.feature_extractor = AutoFeatureExtractor.from_pretrained(
-                    model_id,
-                    cache_dir=self.model_folder,
-                )         
-       
-            # Loading model weight
-            try:
-                self.model = AutoModelForImageSegmentation.from_pretrained(
-                    model_id,
-                    cache_dir=self.model_folder,
-                    local_files_only=True
-                )
-            except Exception as e:
-                print(f"Failed with error: {e}. Trying without the local_files_only parameter...")
-                self.model = AutoModelForImageSegmentation.from_pretrained(
+                self.model = DetrForSegmentation.from_pretrained(
                     model_id,
                     cache_dir=self.model_folder
                 )
 
+            # Set device
             self.device = torch.device("cuda") if param.cuda and torch.cuda.is_available() else torch.device("cpu")
             self.model.to(self.device)
-            print("Will run on {}".format(self.device.type))
+            print("Will run on {}".format(self.device))
+
+            # Feature extractor selection
+            try:
+                self.feature_extractor = AutoFeatureExtractor.from_pretrained(
+                    model_id,
+                    cache_dir=self.model_folder,
+                    local_files_only=True
+                )
+            except Exception as e:
+                print(f"Failed with error: {e}. Trying without the local_files_only parameter...")
+                self.feature_extractor = AutoFeatureExtractor.from_pretrained(
+                    model_id,
+                    cache_dir=self.model_folder,
+                )       
 
             # Getting classe name
             self.meta = MetadataCatalog.get("coco_2017_val_panoptic_separated")
@@ -156,6 +162,9 @@ class InferHfImageSeg(dataprocess.CInstanceSegmentationTask):
             self.thing_classes = self.meta.get("thing_classes")
             self.classes = self.thing_classes + self.stuff_classes
             self.set_names(self.classes)
+
+            # Reset torch hub
+            torch.hub.set_dir(old_hub_dir)
 
             param.update = False
 
@@ -169,7 +178,6 @@ class InferHfImageSeg(dataprocess.CInstanceSegmentationTask):
         self.end_task_run()
 
     def infer(self, image):
-
         param = self.get_param_object()
 
         # Image pre-pocessing (image transformation and conversion to PyTorch tensor)
@@ -274,6 +282,11 @@ class InferHfImageSegFactory(dataprocess.CTaskFactory):
         # Set process information as string here
         self.info.name = "infer_hf_image_seg"
         self.info.short_description = "Panoptic segmentation using models from Hugging Face. "
+        self.info.description = "This plugin proposes inference for panoptic segmentation "\
+                                "using transformers models from Hugging Face. It regroups "\
+                                "models covered by the Hugging Face class: "\
+                                "AutoModelForImageSegmentation. Models can be loaded either "\
+                                "from your fine-tuned model (local) or from the Hugging Face Hub."
         # relative path -> as displayed in Ikomia application process tree
         self.info.path = "Plugins/Python/Panoptic Segmentation"
         self.info.version = "1.1.1"
@@ -290,8 +303,7 @@ class InferHfImageSegFactory(dataprocess.CTaskFactory):
         # URL of documentation
         self.info.documentation_link = "https://www.aclweb.org/anthology/2020.emnlp-demos.6"
         # Code source repository
-        self.info.repository = "https://github.com/Ikomia-hub/infer_hf_image_seg"
-        self.info.original_repository = "https://github.com/huggingface/transformers"
+        self.info.repository = "https://github.com/huggingface/transformers"
         # Keywords used for search
         self.info.keywords = "instance, segmentation, inference, transformer,"\
                             "Hugging Face, Pytorch, Dert, resnet, Facebook"
